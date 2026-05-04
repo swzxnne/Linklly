@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String   @unique
+  hashPassword String
+  links        Link[]
+  profile      Profile?
+}
+
+model Profile {
+  id     Int    @id @default(autoincrement())
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id])
+  bio    String
+  name   String
+}
+
+model Link {
+  id          Int          @id @default(autoincrement())
+  title       String
+  url         String
+  clickCount  Int
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  clickEvents ClickEvent[]
+}
+
+model ClickEvent {
+  id        Int      @id @default(autoincrement())
+  linkId    Int
+  clickedAt DateTime
+  link      Link     @relation(fields: [linkId], references: [id])
+}

@@ -4,11 +4,18 @@
     // File Layout
     // "rootDir": "./src",
     // "outDir": "./dist",
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
+    "moduleResolution": "bundler",
+
+    "ignoreDeprecations": "6.0",
+    
+
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "esnext",
+    "module": "ESNext",
+    "target": "ES2023",
     "types": [],
     // For nodejs:
     // "lib": ["esnext"],
@@ -40,5 +47,6 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "esModuleInterop": true
   }
 }
