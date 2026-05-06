@@ -63,7 +63,7 @@ export async function checkExisting(
       where: { username },
     });
     if (existingUser) {
-      return res.status(409).json({ message: "User already exists" });
+      return res.status(409).json({ message: "Email already exists" });
     }
 
     const existingEmail = await prisma.user.findUnique({

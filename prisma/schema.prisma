@@ -19,7 +19,7 @@ model User {
 model Profile {
   id     Int    @id @default(autoincrement())
   userId Int    @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   bio    String
   name   String
 }
@@ -30,7 +30,7 @@ model Link {
   url         String
   clickCount  Int
   userId      Int
-  user        User         @relation(fields: [userId], references: [id])
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   clickEvents ClickEvent[]
 }
 
@@ -38,5 +38,5 @@ model ClickEvent {
   id        Int      @id @default(autoincrement())
   linkId    Int
   clickedAt DateTime
-  link      Link     @relation(fields: [linkId], references: [id])
+  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
 }

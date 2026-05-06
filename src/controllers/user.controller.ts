@@ -9,11 +9,11 @@ export async function fetchUserProfile(req: Request, res: Response) {
     if (!username) {
       return res.status(400).json({ message: "Username is required" });
     }
+    
     const user = await prisma.user.findUniqueOrThrow({
       where: { username: username as string },
       select: {
         username: true,
-        email: true,
         profile: {
           omit: { id: true, userId: true },
         },
@@ -77,7 +77,7 @@ export async function resetPassword(req: Request, res: Response) {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { password: newHashPassword },
+      data: { hashPassword: newHashPassword },
     });
 
     res.status(200).json({ message: "Password updated successfully" });

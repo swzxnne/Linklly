@@ -1,10 +1,20 @@
 import { type Request, type Response } from "express";
 import { prisma } from "../../lib/prisma.ts";
-
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
+import validator from "validator";
 export async function createLink(req: Request, res: Response) {
   try {
     const { userId } = (req as any).user;
     const { title, url } = req.body;
+
+    if (
+      !validator.isURL(url, {
+        protocols: ["http", "https"],
+        require_protocol: true,
+      })
+    ) {
+      return res.status(400).json({ message: "Invalid URL" });
+    }
 
     const link = await prisma.link.create({
       data: {
@@ -18,7 +28,9 @@ export async function createLink(req: Request, res: Response) {
     return res.status(201).json({ message: "Link created", link });
   } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to create link", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to create link", error: error.message });
   }
 }
 
@@ -34,7 +46,9 @@ export async function getUserLinks(req: Request, res: Response) {
     return res.status(200).json({ message: "Links retrieved", links });
   } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to fetch links", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch links", error: error.message });
   }
 }
 
@@ -71,7 +85,9 @@ export async function updateLink(req: Request, res: Response) {
     return res.status(200).json({ message: "Link updated", link: updatedLink });
   } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to update link", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to update link", error: error.message });
   }
 }
 
@@ -103,7 +119,9 @@ export async function deleteLink(req: Request, res: Response) {
     return res.status(200).json({ message: "Link deleted successfully" });
   } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to delete link", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to delete link", error: error.message });
   }
 }
 
@@ -131,9 +149,25 @@ export async function incrementClick(req: Request, res: Response) {
       },
     });
 
-    return res.status(200).json({ message: "Click tracked", link: updatedLink });
+    return res
+      .status(200)
+      .json({ message: "Click tracked", link: updatedLink });
   } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to track click", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to track click", error: error.message });
   }
 }
+export const clickLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minute window
+  max: 5, // Limit each IP to 5 clicks per linkId per window
+  keyGenerator: (req: Request) => {
+    const safeIp = ipKeyGenerator(req.ip ?? "");
+    // Combine IP and link ID to create a unique identifier for this specific interaction
+    return `${safeIp}-${req.params.id}`;
+  },
+  message: "Too many clicks recorded for this link. Please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});

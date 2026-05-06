@@ -1,7 +1,6 @@
 import { type Request, type Response } from "express";
 import * as bcrypt from "bcrypt-ts/node";
 import { signToken } from "../utils/jwt.ts";
-import type { User } from "../../generated/prisma/client.ts";
 import { prisma } from "../../lib/prisma.ts";
 
 export async function registerNewUser(req: Request, res: Response) {
@@ -32,8 +31,8 @@ export async function loginUser(req: Request, res: Response) {
   const user = await prisma.user.findUnique({
     where: { username: username },
   });
-  if (user == null) {
-    return res.status(404).json({ message: "User not found" });
+  if (username == null) {
+    return res.status(401).json({ message: "Invalid credentials" });
   }
 
   const isMatch = await bcrypt.compare(password, user!.hashPassword);
