@@ -1,28 +1,30 @@
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
+// @ts-ignore: helmet module may not have local type declarations
+import helmet from "helmet";
+import cors from "cors";
 import { fileURLToPath } from "url";
+
 const app = express();
+app.set("trust proxy", 1);
 const port = 3000;
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
+app.use(helmet());
 app.use(express.static(path.join(__dirname, "../public")));
-app.use(express.json());
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+app.use(express.json({ limit: "10kb" }));
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
+app.use(
+  cors({
+    origin: "https://yourdomain.com", // Avoid '*' in production for security
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 import authRoutes from "./routes/auth.route.ts";
 import userRoutes from "./routes/user.route.ts";

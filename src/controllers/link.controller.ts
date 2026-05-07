@@ -2,6 +2,7 @@ import { type Request, type Response } from "express";
 import { prisma } from "../../lib/prisma.ts";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import validator from "validator";
+import { error } from "console";
 export async function createLink(req: Request, res: Response) {
   try {
     const { userId } = (req as any).user;
@@ -13,9 +14,8 @@ export async function createLink(req: Request, res: Response) {
         require_protocol: true,
       })
     ) {
-      return res.status(400).json({ message: "Invalid URL" });
+      return res.status(400).json({ message: "Invalid URL", error });
     }
-
     const link = await prisma.link.create({
       data: {
         title,
@@ -28,9 +28,7 @@ export async function createLink(req: Request, res: Response) {
     return res.status(201).json({ message: "Link created", link });
   } catch (error: any) {
     console.error(error);
-    return res
-      .status(500)
-      .json({ message: "Failed to create link", error: error.message });
+    return res.status(500).json({ message: "Failed to create link" });
   }
 }
 
@@ -132,22 +130,23 @@ export async function incrementClick(req: Request, res: Response) {
     if (!Number.isInteger(linkId)) {
       return res.status(400).json({ message: "Invalid link id" });
     }
-
-    await prisma.clickEvent.create({
-      data: {
-        linkId,
-        clickedAt: new Date(),
-      },
-    });
-
-    const updatedLink = await prisma.link.update({
-      where: { id: linkId },
-      data: {
-        clickCount: {
-          increment: 1,
+    const [clickEvent, updatedLink] = await prisma.$transaction([
+      prisma.clickEvent.create({
+        data: {
+          linkId,
+          clickedAt: new Date(),
         },
-      },
-    });
+      }),
+
+      prisma.link.update({
+        where: { id: linkId },
+        data: {
+          clickCount: {
+            increment: 1,
+          },
+        },
+      }),
+    ]);
 
     return res
       .status(200)

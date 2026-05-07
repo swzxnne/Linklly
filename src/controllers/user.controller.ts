@@ -9,7 +9,7 @@ export async function fetchUserProfile(req: Request, res: Response) {
     if (!username) {
       return res.status(400).json({ message: "Username is required" });
     }
-    
+
     const user = await prisma.user.findUniqueOrThrow({
       where: { username: username as string },
       select: {
@@ -25,6 +25,7 @@ export async function fetchUserProfile(req: Request, res: Response) {
       message: "User profile found",
       data: user,
     });
+    
   } catch (error: any) {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "User not found" });
@@ -47,7 +48,7 @@ export async function editProfile(req: Request, res: Response) {
       .status(200)
       .json({ message: "Profile updated", user: updatedUser });
   } catch (error: any) {
-    return res.status(500).json({ message: "Update failed", error });
+    return res.status(500).json({ message: "Update failed", error: error.message });
   }
 }
 
@@ -73,7 +74,7 @@ export async function resetPassword(req: Request, res: Response) {
         .status(400)
         .json({ message: "New password must be different from old password" });
     }
-    const newHashPassword = await bcrypt.hash(newPassword, 10);
+    const newHashPassword = await bcrypt.hash(newPassword, 12);
 
     await prisma.user.update({
       where: { id: userId },
@@ -105,7 +106,7 @@ export async function deleteUser(req: Request, res: Response) {
         .status(404)
         .json({ error: "User not found or data doesnt match" });
     } else {
-      return res.status(404).json({ error });
+      return res.status(500).json({ message: "Internal error"});
     }
   }
 }

@@ -48,7 +48,11 @@ export function validateRegisterUser(
   next();
 }
 function isValidPassword(password: any): boolean {
-  return password.length >= 8;
+  return validator.isStrongPassword(password, {
+    minLength: 8,
+    minUppercase: 1,
+    minNumbers: 1,
+  });
 }
 
 export async function checkExisting(
@@ -60,23 +64,18 @@ export async function checkExisting(
     const { username, email } = req.body;
 
     const existingUser = await prisma.user.findUnique({
-      where: { username },
-    });
-    if (existingUser) {
-      return res.status(409).json({ message: "Email already exists" });
-    }
-
-    const existingEmail = await prisma.user.findUnique({
       where: {
+        username,
         email,
       },
     });
-    if (existingEmail) {
-      return res.status(409).json({ message: "Email already exists" });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
     }
     next();
-  } catch (error) {
-    return res.status(409).json({ message: "Error checking existing users" });
+  } catch (error: any) {
+    if (error.code === "P2002")
+      return res.status(409).json({ message: "Error checking existing users" });
   }
 }
 export function validateLoginUser(

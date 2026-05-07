@@ -1,5 +1,5 @@
 import "dotenv/config";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 
 export const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -10,7 +10,10 @@ export const signToken = (payload: object) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "3600ms" });
 };
 
-export const verifyToken = (token: string) => {
-  return jwt.verify(token, JWT_SECRET);
+export const verifyToken = (token: string): JwtPayload & { userId: number } => {
+  const decoded = jwt.verify(token, JWT_SECRET);
+  if (typeof decoded === "string" || typeof decoded.userId !== "number") {
+    throw new Error("Invalid token payload");
+  }
+  return decoded as JwtPayload & { userId: number };
 };
-
